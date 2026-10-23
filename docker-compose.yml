@@ -72,6 +72,7 @@ services:
       - backend_net
     depends_on:
       - prometheus
+      - loki
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.47.0
@@ -85,6 +86,31 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
     networks:
       - backend_net
+
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: loki_portfolio
+    restart: always
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - backend_net
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: promtail_portfolio
+    restart: always
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./promtail/promtail-config.yaml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - backend_net
+    depends_on:
+      - loki
 
 volumes:
   db_data:
